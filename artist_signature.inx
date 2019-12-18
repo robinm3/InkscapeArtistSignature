@@ -4,9 +4,9 @@
   <id>org.ekips.filter.artist_signature</id>
   <dependency type="executable" location="extensions">artist_signature.py</dependency>
   <dependency type="executable" location="extensions">inkex.py</dependency>
-  <param name='active-tab' type="notebook">
   <!-- one per page(tab) - unique names. Can discover which page in program-->
     <!-- Basic page for artist signature-->
+  <param name='active-tab' type="notebook">
     <page name="ArtistSignature" _gui-text="Artist Signature">
       <param name="artistName" type="string" _gui-text="Enter your artist name">artist_name</param>
       <param name="textSize" type="int"   min="3"    max="1200"    _gui-text="Text size(3..1200)">12</param>
@@ -19,6 +19,11 @@
             <_option value="bottomRight">Bottom Right</_option>
       </param>
     </page>
+    <!-- next tab - Advanced options -->
+    <page name='advanced' _gui-text='Advanced options'>
+      <param name="hexColour" type="string" _gui-text="Enter a colour in hex">#000000</param>
+    </page>
+  </param>
   <effect>
     <object-type>all</object-type>
     <effects-menu>

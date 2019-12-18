@@ -71,6 +71,12 @@ class ArtistSignatureEffect(inkex.Effect):
                                      dest="hexColour", default='#000000',
                                      help="Give a colour in hex")
 
+        # here so we can have tabs - but we do not use it directly - else error
+        self.OptionParser.add_option("", "--active-tab",
+                                     action="store", type="string",
+                                     dest="active_tab", default='title', # use a legitmate default
+                                     help="Active tab.")
+
     def effect(self):
         """
         Effect behaviour.
@@ -79,16 +85,12 @@ class ArtistSignatureEffect(inkex.Effect):
         # Get artist's name, text size, signature place.
         artistName = self.options.artistName
         textSize = self.options.textSize
-        hexColour = self.options.hexCoulour
+        hexColour = self.options.hexColour
         signaturePlace = self.options.signaturePlace
 
         # Get access to main SVG document element and get its dimensions.
         svg = self.document.getroot()
         scale = self.unittouu('1px')
-
-        # Get text colour:
-        self.options.strokeColour = hexColour
-        path_stroke = self.options.strokeColour 
 
         # query inkscape about the bounding box
         if len(self.options.ids) == 0:
@@ -125,37 +127,35 @@ class ArtistSignatureEffect(inkex.Effect):
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
         # Create text element
-        style = {'text-align' : 'center', 'text-anchor': 'middle'}
-        text = inkex.etree.SubElement(topgroup, 'text', text_atts)
-        text.set('style', formatStyle(style))
-        font_height = min(32, max( 10, int(self.getUnittouu(str(textSize) + self.options.units))))
+        font_height = max( 10, int(self.getUnittouu(str(textSize) + 'mm')))
         text_style = { 'font-size': str(font_height),
                        'font-family': 'arial',
                        'text-anchor': 'middle',
                        'text-align': 'center',
-                       'fill': path_stroke }
+                       'fill': hexColour }
         text_atts = {'style':simplestyle.formatStyle(text_style),
                      'x': str(44),
                      'y': str(-15) }
-        
+        text = inkex.etree.SubElement(layer, 'text', text_atts)
+        text.set('style', formatStyle(text_style))
         text.text = artistName
 
         # Set text position.
         if signaturePlace == "topLeft":
-            xPos = (self.bbox[0]+15+len(artistName)*3.5)
-            yPos = (self.bbox[2]+15)   
+            xPos = (self.bbox[0]+(15+len(artistName)*3.5)*scale)
+            yPos = (self.bbox[2]+(15)*scale)   
         elif signaturePlace == "topRight":
-            xPos = (self.bbox[1]-15-len(artistName)*3.5)
-            yPos = (self.bbox[2]+15)
+            xPos = ((self.bbox[1]-(15+len(artistName)*3.5)*scale))
+            yPos = (self.bbox[2]+(15)*scale)
         elif signaturePlace == "bottomLeft":
-            xPos = (self.bbox[0]+15+len(artistName)*3.5)
-            yPos = (self.bbox[3]-15)
+            xPos = (self.bbox[0]+(15+len(artistName)*3.5)*scale)
+            yPos = (self.bbox[3]-(15)*scale)
         elif signaturePlace == "center":
             xPos = (self.bbox[0] + ((self.bbox[1]-self.bbox[0]) / 2))
             yPos = (self.bbox[2] + ((self.bbox[3]-self.bbox[2]) / 2))
         else:
-            xPos = (self.bbox[1]-15-len(artistName)*3.5)
-            yPos = (self.bbox[3]-15)
+            xPos = (self.bbox[1]-(15+len(artistName)*3.5)*scale)
+            yPos = (self.bbox[3]-(15)*scale)
         
         text.set('x', str(xPos))
         text.set('y', str(yPos))
@@ -165,6 +165,13 @@ class ArtistSignatureEffect(inkex.Effect):
 
         # Connect elements together.
         layer.append(text)
+
+    def getUnittouu(self, param):
+        " for 0.48 and 0.91 compatibility "
+        try:
+            return inkex.unittouu(param)
+        except AttributeError:
+            return self.unittouu(param)
 
 # Create effect instance and apply it.
 effect = ArtistSignatureEffect()
