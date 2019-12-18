@@ -4,8 +4,8 @@
   <id>org.ekips.filter.artist_signature</id>
   <dependency type="executable" location="extensions">artist_signature.py</dependency>
   <dependency type="executable" location="extensions">inkex.py</dependency>
-  <param name="artist_name" type="string" _gui-text="Enter your artist name">artist_name</param>
-  <param name="signature_place" _gui-text="Where do you want your signature to be?" type="optiongroup">
+  <param name="artistName" type="string" _gui-text="Enter your artist name">artist_name</param>
+  <param name="signaturePlace" _gui-text="Where do you want your signature to be?" type="optiongroup">
 				<!-- underscores indicate translatability -->
 				<_option value="topLeft">Top Left</_option>
 				<_option value="topRight">Top Right</_option>
