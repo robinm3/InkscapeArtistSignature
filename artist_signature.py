@@ -53,26 +53,43 @@ class ArtistSignatureEffect(inkex.Effect):
                                      dest = 'artistName', default = 'Artist Name',
                                      help = "Enter your artist name")
 
+        # Define string option "--textSize" with "-t" shortcut and default value "24"
+        self.OptionParser.add_option("-t", "--textSize",
+                                     action="store", type="int",
+                                     dest="textSize", default=24,
+                                     help="Text size")
+
         # Define string option "--place" with "-p" shortcut and default value "bottomRight"
         self.OptionParser.add_option("-p", "--signaturePlace",
                                      action="store", type="string", 
                                      dest="signaturePlace", default='bottomRight',
                                      help="Where do you want your signature to appear?")
 
+        # Define string option "--hexColour" with "-c" shortcut and default value ""
+        self.OptionParser.add_option("-c", "--hexColour",
+                                     action="store", type="string", 
+                                     dest="hexColour", default='#000000',
+                                     help="Give a colour in hex")
+
     def effect(self):
         """
         Effect behaviour.
         Overrides base class' method and inserts the artist's name text into SVG document.
         """
-        # Get artist's name and signature place.
+        # Get artist's name, text size, signature place.
         artistName = self.options.artistName
+        textSize = self.options.textSize
+        hexColour = self.options.hexCoulour
         signaturePlace = self.options.signaturePlace
 
         # Get access to main SVG document element and get its dimensions.
         svg = self.document.getroot()
         scale = self.unittouu('1px')
 
-        # Get width and height:
+        # Get text colour:
+        self.options.strokeColour = hexColour
+        path_stroke = self.options.strokeColour 
+
         # query inkscape about the bounding box
         if len(self.options.ids) == 0:
             inkex.errormsg(("Please select an object."))
@@ -108,7 +125,19 @@ class ArtistSignatureEffect(inkex.Effect):
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
         # Create text element
-        text = inkex.etree.Element(inkex.addNS('text','svg'))
+        style = {'text-align' : 'center', 'text-anchor': 'middle'}
+        text = inkex.etree.SubElement(topgroup, 'text', text_atts)
+        text.set('style', formatStyle(style))
+        font_height = min(32, max( 10, int(self.getUnittouu(str(textSize) + self.options.units))))
+        text_style = { 'font-size': str(font_height),
+                       'font-family': 'arial',
+                       'text-anchor': 'middle',
+                       'text-align': 'center',
+                       'fill': path_stroke }
+        text_atts = {'style':simplestyle.formatStyle(text_style),
+                     'x': str(44),
+                     'y': str(-15) }
+        
         text.text = artistName
 
         # Set text position.
@@ -131,9 +160,8 @@ class ArtistSignatureEffect(inkex.Effect):
         text.set('x', str(xPos))
         text.set('y', str(yPos))
 
+
         # Center text horizontally with CSS style.
-        style = {'text-align' : 'center', 'text-anchor': 'middle'}
-        text.set('style', formatStyle(style))
 
         # Connect elements together.
         layer.append(text)
