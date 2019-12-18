@@ -127,7 +127,7 @@ class ArtistSignatureEffect(inkex.Effect):
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
 
         # Create text element
-        font_height = max( 10, int(self.getUnittouu(str(textSize) + 'mm')))
+        font_height = max(10, int(self.getUnittouu(str(textSize) + 'px')))
         text_style = { 'font-size': str(font_height),
                        'font-family': 'arial',
                        'text-anchor': 'middle',
@@ -142,20 +142,20 @@ class ArtistSignatureEffect(inkex.Effect):
 
         # Set text position.
         if signaturePlace == "topLeft":
-            xPos = (self.bbox[0]+(15+len(artistName)*3.5)*scale)
-            yPos = (self.bbox[2]+(15)*scale)   
+            xPos = (self.bbox[0]+(len(artistName)*3.5)*font_height/10)
+            yPos = (self.bbox[2]+(15)*font_height/10)   
         elif signaturePlace == "topRight":
-            xPos = ((self.bbox[1]-(15+len(artistName)*3.5)*scale))
-            yPos = (self.bbox[2]+(15)*scale)
+            xPos = (self.bbox[1]-(len(artistName)*3.5)*font_height/10)
+            yPos = (self.bbox[2]+(15)*font_height/10)
         elif signaturePlace == "bottomLeft":
-            xPos = (self.bbox[0]+(15+len(artistName)*3.5)*scale)
-            yPos = (self.bbox[3]-(15)*scale)
+            xPos = (self.bbox[0]+(len(artistName)*3.5)*font_height/10)
+            yPos = (self.bbox[3]-(10)*font_height/10)
         elif signaturePlace == "center":
             xPos = (self.bbox[0] + ((self.bbox[1]-self.bbox[0]) / 2))
             yPos = (self.bbox[2] + ((self.bbox[3]-self.bbox[2]) / 2))
         else:
-            xPos = (self.bbox[1]-(15+len(artistName)*3.5)*scale)
-            yPos = (self.bbox[3]-(15)*scale)
+            xPos = (self.bbox[1]-(len(artistName)*3.5)*font_height/10)
+            yPos = (self.bbox[3]-(10)*font_height/10)
         
         text.set('x', str(xPos))
         text.set('y', str(yPos))
