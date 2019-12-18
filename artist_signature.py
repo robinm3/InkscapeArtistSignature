@@ -66,10 +66,10 @@ class ArtistSignatureEffect(inkex.Effect):
                                      help="Where do you want your signature to appear?")
 
         # Define string option "--hexColour" with "-c" shortcut and default value ""
-        self.OptionParser.add_option("-c", "--hexColour",
+        self.OptionParser.add_option("-s", "--strokeColour",
                                      action="store", type="string", 
-                                     dest="hexColour", default='#000000',
-                                     help="Give a colour in hex")
+                                     dest="strokeColour", default=000,
+                                     help="Give colour in RGBA")
 
         # here so we can have tabs - but we do not use it directly - else error
         self.OptionParser.add_option("", "--active-tab",
@@ -85,7 +85,7 @@ class ArtistSignatureEffect(inkex.Effect):
         # Get artist's name, text size, signature place.
         artistName = self.options.artistName
         textSize = self.options.textSize
-        hexColour = self.options.hexColour
+        hexColour = self.getColorString(self.options.strokeColour)
         signaturePlace = self.options.signaturePlace
 
         # Get access to main SVG document element and get its dimensions.
@@ -141,6 +141,34 @@ class ArtistSignatureEffect(inkex.Effect):
         text.text = artistName
 
         # Set text position.
+
+        xPos, yPos = self.textPosition(signaturePlace, artistName, font_height)
+
+        text.set('x', str(xPos))
+        text.set('y', str(yPos))
+
+        # Connect elements together.
+        layer.append(text)
+
+    def getColorString(self, longColor, verbose=False):
+        """ 
+        Convert the long into a #RRGGBB color value
+        - verbose=true pops up value for us in defaults
+        conversion back is A + B*256^1 + G*256^2 + R*256^3
+        """
+        if verbose: inkex.debug("%s ="%(longColor))
+        longColor = long(longColor)
+        if longColor <0: longColor = long(longColor) & 0xFFFFFFFF
+        hexColor = hex(longColor)[2:-3]
+        hexColor = '#' + hexColor.rjust(6, '0').upper()
+        if verbose: inkex.debug("  %s for color default value"%(hexColor))
+        return hexColor
+
+    def textPosition(self, signaturePlace, artistName, font_height):
+        """
+        Depending on signature place and width
+        Return position (x, y)
+        """
         if signaturePlace == "topLeft":
             xPos = (self.bbox[0]+(len(artistName)*3.5)*font_height/10)
             yPos = (self.bbox[2]+(15)*font_height/10)   
@@ -157,14 +185,7 @@ class ArtistSignatureEffect(inkex.Effect):
             xPos = (self.bbox[1]-(len(artistName)*3.5)*font_height/10)
             yPos = (self.bbox[3]-(10)*font_height/10)
         
-        text.set('x', str(xPos))
-        text.set('y', str(yPos))
-
-
-        # Center text horizontally with CSS style.
-
-        # Connect elements together.
-        layer.append(text)
+        return (xPos, yPos)
 
     def getUnittouu(self, param):
         " for 0.48 and 0.91 compatibility "
