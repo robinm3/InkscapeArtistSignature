@@ -1,0 +1,25 @@
+<?xml version="0.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+  <_name>Artist Signature</_name>
+  <id>org.ekips.filter.artist_signature</id>
+  <dependency type="executable" location="extensions">artist_signature.py</dependency>
+  <dependency type="executable" location="extensions">inkex.py</dependency>
+  <param name="artist_name" type="string" _gui-text="Enter your artist name">artist_name</param>
+  <param name="signature_place" _gui-text="Where do you want your signature to be?" type="optiongroup">
+				<!-- underscores indicate translatability -->
+				<_option value="topLeft">Top Left</_option>
+				<_option value="topRight">Top Right</_option>
+        <_option value="center">Center</_option>
+				<_option value="bottomLeft">Bottom Left</_option>
+        <_option value="bottomRight">Bottom Right</_option>
+	</param>
+  <effect>
+    <object-type>all</object-type>
+    <effects-menu>
+       <submenu _name="Artist"/>
+    </effects-menu>
+  </effect>
+  <script>
+    <command reldir="extensions" interpreter="python">artist_signature.py</command>
+  </script>
+</inkscape-extension>
