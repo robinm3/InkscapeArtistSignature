@@ -77,7 +77,7 @@ class ArtistSignatureEffect(inkex.Effect):
         artistName = self.options.artistName
         textSize = self.options.textSize
         fontHeight = max(10, int(self.getUnittouu(str(textSize) + 'px')))
-        hexColour = self.getColorString(self.options.strokeColour)
+        hexColour = self.getHexColour(self.options.strokeColour)
         signaturePlace = self.options.signaturePlace
 
         # Get document dimensions
@@ -155,7 +155,7 @@ class ArtistSignatureEffect(inkex.Effect):
             exit()
         return True
 
-    def getColorString(self, longColour):
+    def getHexColour(self, longColour):
         """ 
         Convert the long color into hex colour
         """
