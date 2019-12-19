@@ -12,7 +12,7 @@ For now, you can:
 - Choose text size
 - Select an image and choose where you want to put it on your image(there are options for each corner and the center)
 - Pick the color you want your signature to be in
-- Choose a social media preset that format your name as this social media username
+- Choose a social media preset that formats your name as this social media username
 
 ### How to use ?
 
