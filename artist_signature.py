@@ -41,6 +41,7 @@ class ArtistSignatureEffect(inkex.Effect):
         """
         # Call the base class constructor.
         inkex.Effect.__init__(self)
+        self.artistName = ''
 
         self.OptionParser.add_option('-a', '--artistName', 
                                      action = 'store', type = 'string', 
@@ -57,7 +58,12 @@ class ArtistSignatureEffect(inkex.Effect):
                                      dest="signaturePlace", default='bottomRight',
                                      help="Where do you want your signature to appear?")
 
-        self.OptionParser.add_option("-s", "--strokeColour",
+        self.OptionParser.add_option("-s", "--social",
+                                     action="store", type="string", 
+                                     dest="social", default="",
+                                     help="Add social media?")
+
+        self.OptionParser.add_option("-c", "--strokeColour",
                                      action="store", type="string", 
                                      dest="strokeColour", default=000,
                                      help="Give colour in RGBA")
@@ -74,7 +80,7 @@ class ArtistSignatureEffect(inkex.Effect):
         Overrides base class' method and inserts the artist's name text into SVG document.
         """
         # Get artist's name, text size, hex Colour, signature place.
-        artistName = self.options.artistName
+        self.artistName = self.options.artistName
         textSize = self.options.textSize
         fontHeight = max(10, int(self.getUnittouu(str(textSize) + 'px')))
         hexColour = self.getHexColour(self.options.strokeColour)
@@ -87,23 +93,47 @@ class ArtistSignatureEffect(inkex.Effect):
         if self.objectIsSelected():
             self.bbox = self.getBoundingBoxDimensions(scale)
 
-        if not self.boundingBoxIsPath:
+        if not self.boundingBoxIsPath():
             exit()
 
         # Create a new layer.
         layer = self.createTextLayer('Signature layer')
 
         # Create text element
-        text = self.createText(fontHeight, hexColour, layer, artistName)
+        self.addSocial()
+        text = self.createText(fontHeight, hexColour, layer, self.artistName)
 
         # Set text position.
-        xPos, yPos = self.textPosition(signaturePlace, artistName, fontHeight)
+        xPos, yPos = self.textPosition(signaturePlace, self.artistName, fontHeight)
         text.set('x', str(xPos))
         text.set('y', str(yPos))
 
         # Connect elements together.
         layer.append(text)
-    
+
+    def addSocial(self):
+        social = self.options.social
+        if social == 'Facebook':
+            self.artistName = social + ': @' + self.artistName
+        elif social == 'Tumblr':
+            self.artistName = social + ': @' + (self.artistName.replace(" ", "")).lower()
+        elif social in ('Instagram', 'Twitter'):
+            self.artistName = social + ': @' + self.artistName.replace(" ", "_")
+        elif social == 'Reddit':
+            self.artistName = social + ': u/' + self.artistName.replace(" ", "")
+        elif social == 'DeviantArt':
+            self.artistName = social + ': ' + self.artistName
+        """
+            attribs = {
+                'height'    : str(height),
+                'width'     : str(height),
+                'x'         : str(position[0]),
+                'y'         : str(position[1])
+                }
+            node = inkex.etree.SubElement(layer, inkex.addNS('image','svg'), 'image')
+            xlink = node.get(inkex.addNS('href','xlink'))
+        """
+
     def createTextLayer(self, layerName):
         """
         Creates an inkscape text layer with given name
@@ -144,12 +174,12 @@ class ArtistSignatureEffect(inkex.Effect):
 
         return bbox
     
-    def boundingBoxIsPath(self, bbox):
+    def boundingBoxIsPath(self):
         """
         Avoid ugly failure on rects and texts.
         """
         try:
-            testing_the_water = bbox[0]
+            testing_the_water = self.bbox[0]
         except TypeError:
             inkex.errormsg(('Unable to process this object.  Try changing it into a path first.'))
             exit()

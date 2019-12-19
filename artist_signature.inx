@@ -19,10 +19,23 @@
               <_option value="bottomLeft">Bottom Left</_option>
               <_option value="bottomRight">Bottom Right</_option>
         </param>
+      </page>
+      <page name="Colour" _gui-text="Colour">
         <!-- color is just like an int. BUT only single use on a page-->
         <param name="strokeColour" type="color" gui-text="Line colour: ">0</param>
       </page>
-
+      <page name="SocialMedia" _gui-text="Social Media">
+        <param name="social" _gui-text="Which social media to add?" type="optiongroup">
+              <!-- underscores indicate translatability -->
+              <_option value="">None</_option>
+              <_option value="Twitter">Twitter</_option>
+              <_option value="Instagram">Instagram</_option>
+              <_option value="DeviantArt">DeviantArt</_option>
+              <_option value="Tumblr">Tumblr</_option>
+              <_option value="Reddit">Reddit</_option>
+              <_option value="Facebook">Facebook</_option>
+        </param>
+      </page>
     </param>
     <effect>
       <object-type>all</object-type>
