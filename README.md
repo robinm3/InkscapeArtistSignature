@@ -12,6 +12,7 @@ For now, you can:
 - Choose text size
 - Select an image and choose where you want to put it on your image(there are options for each corner and the center)
 - Pick the color you want your signature to be in
+- Choose a social media preset that format your name as this social media username
 
 ### How to use ?
 
@@ -20,7 +21,7 @@ For now, you can:
 3. Put the two artist_signature files(the .inx and .py ones) in your inkscape extensions directory
 4. Open Inkscape and you'll find the extension in >extension/artist
 5. Select your image/drawing
-6. Put your artist name, choose text size, text placement and text color
+6. Put your artist name, choose text size, text placement. Change text color and social media too if you want!
 7. Click apply. Done! You have your signature!
 
 ### Contribute

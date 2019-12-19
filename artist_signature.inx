@@ -1,4 +1,4 @@
-<?xml version="0.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
     <_name>Artist Signature</_name>
     <id>org.ekips.filter.artist_signature</id>
@@ -10,7 +10,7 @@
 
       <page name="ArtistSignature" _gui-text="Artist Signature">
         <param name="artistName" type="string" _gui-text="Enter your artist name">artist_name</param>
-        <param name="textSize" type="int"   min="3"    max="1200"    _gui-text="Text size(3..1200)">12</param>
+        <param name="textSize" type="int"   min="10"    max="1200"    _gui-text="Text size(3..1200)">12</param>
         <param name="signaturePlace" _gui-text="Where do you want your signature to be?" type="optiongroup">
               <!-- underscores indicate translatability -->
               <_option value="topLeft">Top Left</_option>
