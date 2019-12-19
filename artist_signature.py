@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-# These two lines are only needed if you don't put the script directly into
-# the installation directory
-import sys
-sys.path.append('/usr/share/inkscape/extensions')
+# local library
+import inkex
+import pathmodifier
+from simpletransform import *
+from simplestyle import *
 
 # We will use the inkex module with the predefined Effect base class.
 try:
@@ -11,12 +12,6 @@ try:
     bsubprocess = True
 except:
     bsubprocess = False
-# local library
-import inkex
-import pathmodifier
-from simpletransform import *
-# The simplestyle module provides functions for style parsing.
-from simplestyle import *
 
 
 def points_to_bbox(p):
@@ -42,30 +37,26 @@ class ArtistSignatureEffect(inkex.Effect):
     def __init__(self):
         """
         Constructor.
-        Defines the "--what" option of a script.
+        Defines the options of the script.
         """
         # Call the base class constructor.
         inkex.Effect.__init__(self)
 
-        # Define string option "--artname" with "-an" shortcut and default value "Artist Name"
         self.OptionParser.add_option('-a', '--artistName', 
                                      action = 'store', type = 'string', 
                                      dest = 'artistName', default = 'Artist Name',
                                      help = "Enter your artist name")
 
-        # Define string option "--textSize" with "-t" shortcut and default value "24"
         self.OptionParser.add_option("-t", "--textSize",
                                      action="store", type="int",
                                      dest="textSize", default=24,
                                      help="Text size")
 
-        # Define string option "--place" with "-p" shortcut and default value "bottomRight"
         self.OptionParser.add_option("-p", "--signaturePlace",
                                      action="store", type="string", 
                                      dest="signaturePlace", default='bottomRight',
                                      help="Where do you want your signature to appear?")
 
-        # Define string option "--hexColour" with "-c" shortcut and default value ""
         self.OptionParser.add_option("-s", "--strokeColour",
                                      action="store", type="string", 
                                      dest="strokeColour", default=000,
@@ -74,7 +65,7 @@ class ArtistSignatureEffect(inkex.Effect):
         # here so we can have tabs - but we do not use it directly - else error
         self.OptionParser.add_option("", "--active-tab",
                                      action="store", type="string",
-                                     dest="active_tab", default='title', # use a legitmate default
+                                     dest="active_tab", default='title',
                                      help="Active tab.")
 
     def effect(self):
@@ -82,73 +73,87 @@ class ArtistSignatureEffect(inkex.Effect):
         Effect behaviour.
         Overrides base class' method and inserts the artist's name text into SVG document.
         """
-        # Get artist's name, text size, signature place.
+        # Get artist's name, text size, hex Colour, signature place.
         artistName = self.options.artistName
         textSize = self.options.textSize
         hexColour = self.getColorString(self.options.strokeColour)
         signaturePlace = self.options.signaturePlace
 
         # Get access to main SVG document element and get its dimensions.
-        svg = self.document.getroot()
         scale = self.unittouu('1px')
 
-        # query inkscape about the bounding box
-        if len(self.options.ids) == 0:
-            inkex.errormsg(("Please select an object."))
-            exit()
-        else:
-            q = {'x':0,'y':0,'width':0,'height':0}
-            file = self.args[-1]
-            id = self.options.ids[0]
-            for query in q.keys():
-                if bsubprocess:
-                    p = Popen('inkscape --query-%s --query-id=%s "%s"' % (query,id,file), shell=True, stdout=PIPE, stderr=PIPE)
-                    rc = p.wait()
-                    q[query] = scale*float(p.stdout.read())
-                    err = p.stderr.read()
-                else:
-                    f,err = os.popen3('inkscape --query-%s --query-id=%s "%s"' % (query,id,file))[1:]
-                    q[query] = scale*float(f.read())
-                    f.close()
-                    err.close()
-            self.bbox = (q['x'], q['x']+q['width'], q['y'], q['y']+q['height'])
+        #bounding box
+        if self.objectSelected():
+            self.bbox = self.getBoundingBoxDimensions(scale)
 
-        # Avoid ugly failure on rects and texts.
-        try:
-            testing_the_water = self.bbox[0]
-        except TypeError:
-            inkex.errormsg(('Unable to process this object.  Try changing it into a path first.'))
+        if not self.boundingBoxIsPath:
             exit()
-        
 
         # Create a new layer.
-        layer = inkex.etree.SubElement(svg, 'g')
-        layer.set(inkex.addNS('label', 'inkscape'), 'Signature layer')
-        layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
+        layer = self.createLayer('Signature layer')
 
         # Create text element
         font_height = max(10, int(self.getUnittouu(str(textSize) + 'px')))
-        text_style = { 'font-size': str(font_height),
-                       'font-family': 'arial',
-                       'text-anchor': 'middle',
-                       'text-align': 'center',
-                       'fill': hexColour }
-        text_atts = {'style':simplestyle.formatStyle(text_style),
-                     'x': str(44),
-                     'y': str(-15) }
-        text = inkex.etree.SubElement(layer, 'text', text_atts)
-        text.set('style', formatStyle(text_style))
-        text.text = artistName
+        text = self.createText(font_height, hexColour, layer, artistName)
 
         # Set text position.
-
         xPos, yPos = self.textPosition(signaturePlace, artistName, font_height)
-
         text.set('x', str(xPos))
         text.set('y', str(yPos))
 
         # Connect elements together.
         layer.append(text)
+    
+    def createLayer(self, layerName):
+        """
+        Creates an inkscape layer with given name
+        """
+        layer = inkex.etree.SubElement(self.document.getroot(), 'g')
+        layer.set(inkex.addNS('label', 'inkscape'), str(layerName))
+        layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
+        return layer
+
+    def objectSelected(self):
+        """
+        Makes sure an object has been selected
+        """
+        if len(self.options.ids) == 0:
+            inkex.errormsg(("Please select an object."))
+            exit()
+        return True
+    
+    def getBoundingBoxDimensions(self, scale):
+        """
+        Query inkscape about the bounding box
+        """
+        q = {'x':0,'y':0,'width':0,'height':0}
+        file = self.args[-1]
+        id = self.options.ids[0]
+        for query in q.keys():
+            if bsubprocess:
+                p = Popen('inkscape --query-%s --query-id=%s "%s"' % (query,id,file), shell=True, stdout=PIPE, stderr=PIPE)
+                rc = p.wait()
+                q[query] = scale*float(p.stdout.read())
+                err = p.stderr.read()
+            else:
+                f,err = os.popen3('inkscape --query-%s --query-id=%s "%s"' % (query,id,file))[1:]
+                q[query] = scale*float(f.read())
+                f.close()
+                err.close()
+        bbox = (q['x'], q['x']+q['width'], q['y'], q['y']+q['height'])
+
+        return bbox
+    
+    def boundingBoxIsPath(self, bbox):
+        """
+        Avoid ugly failure on rects and texts.
+        """
+        try:
+            testing_the_water = bbox[0]
+        except TypeError:
+            inkex.errormsg(('Unable to process this object.  Try changing it into a path first.'))
+            exit()
+        return True
 
     def getColorString(self, longColor, verbose=False):
         """ 
@@ -186,6 +191,76 @@ class ArtistSignatureEffect(inkex.Effect):
             yPos = (self.bbox[3]-(10)*font_height/10)
         
         return (xPos, yPos)
+    
+    def createText(self, font_height, hexColour, layer, textString):
+        """
+        Creates text with given options
+        """
+        text_style = { 'font-size': str(font_height),
+                       'font-family': 'arial',
+                       'text-anchor': 'middle',
+                       'text-align': 'center',
+                       'fill': hexColour }
+        text_atts = {'style':simplestyle.formatStyle(text_style),
+                     'x': str(44),
+                     'y': str(-15) }
+        text = inkex.etree.SubElement(layer, 'text', text_atts)
+        text.set('style', formatStyle(text_style))
+        text.text = textString
+        return text
+    
+    def embedImage(self, node):
+        xlink = node.get(inkex.addNS('href','xlink'))
+        if xlink is None or xlink[:5] != 'data:':
+            absref=node.get(inkex.addNS('absref','sodipodi'))
+            url=urlparse.urlparse(xlink)
+            href=urllib.url2pathname(url.path)
+            
+            path=''
+            #path selection strategy:
+            # 1. href if absolute
+            # 2. realpath-ified href
+            # 3. absref, only if the above does not point to a file
+            if (href != None):
+                path=os.path.realpath(href)
+            if (not os.path.isfile(path)):
+                if (absref != None):
+                    path=absref
+
+            try:
+                path=unicode(path, "utf-8")
+            except TypeError:
+                path=path
+                
+            if (not os.path.isfile(path)):
+                inkex.errormsg(_('No xlink:href or sodipodi:absref attributes found, or they do not point to an existing file! Unable to embed image.'))
+                if path:
+                    inkex.errormsg(_("Sorry we could not locate %s") % str(path))
+
+            if (os.path.isfile(path)):
+                file = open(path,"rb").read()
+                embed=True
+                if (file[:4]=='\x89PNG'):
+                    type='image/png'
+                elif (file[:2]=='\xff\xd8'):
+                    type='image/jpeg'
+                elif (file[:2]=='BM'):
+                    type='image/bmp'
+                elif (file[:6]=='GIF87a' or file[:6]=='GIF89a'):
+                    type='image/gif'
+                elif (file[:4]=='MM\x00\x2a' or file[:4]=='II\x2a\x00'):
+                    type='image/tiff'
+                #ico files lack any magic... therefore we check the filename instead
+                elif(path.endswith('.ico')):
+                    type='image/x-icon' #official IANA registered MIME is 'image/vnd.microsoft.icon' tho
+                else:
+                    embed=False
+                if (embed):
+                    node.set(inkex.addNS('href','xlink'), 'data:%s;base64,%s' % (type, base64.encodestring(file)))
+                    if (absref != None):
+                        del node.attrib[inkex.addNS('absref',u'sodipodi')]
+                else:
+                    inkex.errormsg(_("%s is not of type image/png, image/jpeg, image/bmp, image/gif, image/tiff, or image/x-icon") % path)
 
     def getUnittouu(self, param):
         " for 0.48 and 0.91 compatibility "

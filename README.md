@@ -31,4 +31,4 @@ You want to contribute? Nice! Here's how you can help:
 - Also, you can always fork this project, make a branch, create/correct a feature and then make a pull request!
 
 ### Special thanks
-Thank you to [Neon22](https://github.com/Neon22) for his [extension template](https://github.com/Neon22/inkscape_extension_template) which has been and is very useful for creating this extension.
+Special thanks to [Neon22](https://github.com/Neon22) for his [extension template](https://github.com/Neon22/inkscape_extension_template) which has been and is still very useful in the creation of this extension and in the understanding of inkscape extensions.
