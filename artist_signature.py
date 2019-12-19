@@ -76,44 +76,44 @@ class ArtistSignatureEffect(inkex.Effect):
         # Get artist's name, text size, hex Colour, signature place.
         artistName = self.options.artistName
         textSize = self.options.textSize
+        fontHeight = max(10, int(self.getUnittouu(str(textSize) + 'px')))
         hexColour = self.getColorString(self.options.strokeColour)
         signaturePlace = self.options.signaturePlace
 
-        # Get access to main SVG document element and get its dimensions.
+        # Get document dimensions
         scale = self.unittouu('1px')
 
-        #bounding box
-        if self.objectSelected():
+        # Make bounding box
+        if self.objectIsSelected():
             self.bbox = self.getBoundingBoxDimensions(scale)
 
         if not self.boundingBoxIsPath:
             exit()
 
         # Create a new layer.
-        layer = self.createLayer('Signature layer')
+        layer = self.createTextLayer('Signature layer')
 
         # Create text element
-        font_height = max(10, int(self.getUnittouu(str(textSize) + 'px')))
-        text = self.createText(font_height, hexColour, layer, artistName)
+        text = self.createText(fontHeight, hexColour, layer, artistName)
 
         # Set text position.
-        xPos, yPos = self.textPosition(signaturePlace, artistName, font_height)
+        xPos, yPos = self.textPosition(signaturePlace, artistName, fontHeight)
         text.set('x', str(xPos))
         text.set('y', str(yPos))
 
         # Connect elements together.
         layer.append(text)
     
-    def createLayer(self, layerName):
+    def createTextLayer(self, layerName):
         """
-        Creates an inkscape layer with given name
+        Creates an inkscape text layer with given name
         """
         layer = inkex.etree.SubElement(self.document.getroot(), 'g')
         layer.set(inkex.addNS('label', 'inkscape'), str(layerName))
         layer.set(inkex.addNS('groupmode', 'inkscape'), 'layer')
         return layer
 
-    def objectSelected(self):
+    def objectIsSelected(self):
         """
         Makes sure an object has been selected
         """
@@ -155,48 +155,45 @@ class ArtistSignatureEffect(inkex.Effect):
             exit()
         return True
 
-    def getColorString(self, longColor, verbose=False):
+    def getColorString(self, longColour):
         """ 
-        Convert the long into a #RRGGBB color value
-        - verbose=true pops up value for us in defaults
-        conversion back is A + B*256^1 + G*256^2 + R*256^3
+        Convert the long color into hex colour
         """
-        if verbose: inkex.debug("%s ="%(longColor))
-        longColor = long(longColor)
-        if longColor <0: longColor = long(longColor) & 0xFFFFFFFF
-        hexColor = hex(longColor)[2:-3]
-        hexColor = '#' + hexColor.rjust(6, '0').upper()
-        if verbose: inkex.debug("  %s for color default value"%(hexColor))
-        return hexColor
+        longColour = long(longColour)
+        if longColour < 0: 
+            longColour = long(longColour) & 0xFFFFFFFF
+        hexColour = hex(longColour)[2:-3]
+        hexColour = '#' + hexColour.rjust(6, '0').upper()
+        return hexColour
 
-    def textPosition(self, signaturePlace, artistName, font_height):
+    def textPosition(self, signaturePlace, artistName, fontHeight):
         """
         Depending on signature place and width
         Return position (x, y)
         """
         if signaturePlace == "topLeft":
-            xPos = (self.bbox[0]+(len(artistName)*3.5)*font_height/10)
-            yPos = (self.bbox[2]+(15)*font_height/10)   
+            xPos = (self.bbox[0]+(len(artistName)*3.5)*fontHeight/10)
+            yPos = (self.bbox[2]+(15)*fontHeight/10)   
         elif signaturePlace == "topRight":
-            xPos = (self.bbox[1]-(len(artistName)*3.5)*font_height/10)
-            yPos = (self.bbox[2]+(15)*font_height/10)
+            xPos = (self.bbox[1]-(len(artistName)*3.5)*fontHeight/10)
+            yPos = (self.bbox[2]+(15)*fontHeight/10)
         elif signaturePlace == "bottomLeft":
-            xPos = (self.bbox[0]+(len(artistName)*3.5)*font_height/10)
-            yPos = (self.bbox[3]-(10)*font_height/10)
+            xPos = (self.bbox[0]+(len(artistName)*3.5)*fontHeight/10)
+            yPos = (self.bbox[3]-(10)*fontHeight/10)
         elif signaturePlace == "center":
             xPos = (self.bbox[0] + ((self.bbox[1]-self.bbox[0]) / 2))
             yPos = (self.bbox[2] + ((self.bbox[3]-self.bbox[2]) / 2))
         else:
-            xPos = (self.bbox[1]-(len(artistName)*3.5)*font_height/10)
-            yPos = (self.bbox[3]-(10)*font_height/10)
+            xPos = (self.bbox[1]-(len(artistName)*3.5)*fontHeight/10)
+            yPos = (self.bbox[3]-(10)*fontHeight/10)
         
         return (xPos, yPos)
     
-    def createText(self, font_height, hexColour, layer, textString):
+    def createText(self, fontHeight, hexColour, layer, textString):
         """
         Creates text with given options
         """
-        text_style = { 'font-size': str(font_height),
+        text_style = { 'font-size': str(fontHeight),
                        'font-family': 'arial',
                        'text-anchor': 'middle',
                        'text-align': 'center',
@@ -208,59 +205,6 @@ class ArtistSignatureEffect(inkex.Effect):
         text.set('style', formatStyle(text_style))
         text.text = textString
         return text
-    
-    def embedImage(self, node):
-        xlink = node.get(inkex.addNS('href','xlink'))
-        if xlink is None or xlink[:5] != 'data:':
-            absref=node.get(inkex.addNS('absref','sodipodi'))
-            url=urlparse.urlparse(xlink)
-            href=urllib.url2pathname(url.path)
-            
-            path=''
-            #path selection strategy:
-            # 1. href if absolute
-            # 2. realpath-ified href
-            # 3. absref, only if the above does not point to a file
-            if (href != None):
-                path=os.path.realpath(href)
-            if (not os.path.isfile(path)):
-                if (absref != None):
-                    path=absref
-
-            try:
-                path=unicode(path, "utf-8")
-            except TypeError:
-                path=path
-                
-            if (not os.path.isfile(path)):
-                inkex.errormsg(_('No xlink:href or sodipodi:absref attributes found, or they do not point to an existing file! Unable to embed image.'))
-                if path:
-                    inkex.errormsg(_("Sorry we could not locate %s") % str(path))
-
-            if (os.path.isfile(path)):
-                file = open(path,"rb").read()
-                embed=True
-                if (file[:4]=='\x89PNG'):
-                    type='image/png'
-                elif (file[:2]=='\xff\xd8'):
-                    type='image/jpeg'
-                elif (file[:2]=='BM'):
-                    type='image/bmp'
-                elif (file[:6]=='GIF87a' or file[:6]=='GIF89a'):
-                    type='image/gif'
-                elif (file[:4]=='MM\x00\x2a' or file[:4]=='II\x2a\x00'):
-                    type='image/tiff'
-                #ico files lack any magic... therefore we check the filename instead
-                elif(path.endswith('.ico')):
-                    type='image/x-icon' #official IANA registered MIME is 'image/vnd.microsoft.icon' tho
-                else:
-                    embed=False
-                if (embed):
-                    node.set(inkex.addNS('href','xlink'), 'data:%s;base64,%s' % (type, base64.encodestring(file)))
-                    if (absref != None):
-                        del node.attrib[inkex.addNS('absref',u'sodipodi')]
-                else:
-                    inkex.errormsg(_("%s is not of type image/png, image/jpeg, image/bmp, image/gif, image/tiff, or image/x-icon") % path)
 
     def getUnittouu(self, param):
         " for 0.48 and 0.91 compatibility "
