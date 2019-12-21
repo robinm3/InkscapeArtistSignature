@@ -5,8 +5,6 @@ import inkex
 import pathmodifier
 from simpletransform import *
 from simplestyle import *
-
-# We will use the inkex module with the predefined Effect base class.
 try:
     from subprocess import Popen, PIPE
     bsubprocess = True
@@ -53,6 +51,11 @@ class ArtistSignatureEffect(inkex.Effect):
                                      dest="textSize", default=24,
                                      help="Text size")
 
+        self.OptionParser.add_option("-f", "--fontType",
+                                     action="store", type="str",
+                                     dest="fontType", default="arial",
+                                     help="Give font type")
+
         self.OptionParser.add_option("-p", "--signaturePlace",
                                      action="store", type="string", 
                                      dest="signaturePlace", default='bottomRight',
@@ -82,6 +85,7 @@ class ArtistSignatureEffect(inkex.Effect):
         # Get artist's name, text size, hex Colour, signature place.
         self.artistName = self.options.artistName
         textSize = self.options.textSize
+        fontType = self.options.fontType
         fontHeight = max(10, int(self.getUnittouu(str(textSize) + 'px')))
         hexColour = self.getHexColour(self.options.strokeColour)
         signaturePlace = self.options.signaturePlace
@@ -96,19 +100,19 @@ class ArtistSignatureEffect(inkex.Effect):
         if not self.boundingBoxIsPath():
             exit()
 
-        # Create a new layer.
+        # Create a new layer
         layer = self.createTextLayer('Signature layer')
 
         # Create text element
         self.addSocial()
-        text = self.createText(fontHeight, hexColour, layer, self.artistName)
+        text = self.createText(fontType, fontHeight, hexColour, layer, self.artistName)
 
-        # Set text position.
+        # Set text position
         xPos, yPos = self.textPosition(signaturePlace, self.artistName, fontHeight)
         text.set('x', str(xPos))
         text.set('y', str(yPos))
 
-        # Connect elements together.
+        # Connect elements together
         layer.append(text)
 
     def addSocial(self):
@@ -219,12 +223,12 @@ class ArtistSignatureEffect(inkex.Effect):
         
         return (xPos, yPos)
     
-    def createText(self, fontHeight, hexColour, layer, textString):
+    def createText(self, fontType, fontHeight, hexColour, layer, textString):
         """
         Creates text with given options
         """
         text_style = { 'font-size': str(fontHeight),
-                       'font-family': 'arial',
+                       'font-family': fontType,
                        'text-anchor': 'middle',
                        'text-align': 'center',
                        'fill': hexColour }

@@ -11,6 +11,7 @@
       <page name="ArtistSignature" _gui-text="Artist Signature">
         <param name="artistName" type="string" _gui-text="Enter your artist name">artist_name</param>
         <param name="textSize" type="int"   min="10"    max="1200"    _gui-text="Text size(3..1200)">12</param>
+        <param name="fontType" type="string" _gui-text="Font type">arial</param>
         <param name="signaturePlace" _gui-text="Where do you want your signature to be?" type="optiongroup">
               <!-- underscores indicate translatability -->
               <_option value="topLeft">Top Left</_option>
