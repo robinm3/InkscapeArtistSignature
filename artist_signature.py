@@ -11,33 +11,16 @@ try:
 except:
     bsubprocess = False
 
-
-def points_to_bbox(p):
-    """ 
-    from a list of points (x,y pairs)
-    return the lower-left xy and upper-right xy
-    """
-    llx = urx = p[0][0]
-    lly = ury = p[0][1]
-    for x in p[1:]:
-        if   x[0] < llx: llx = x[0]
-        elif x[0] > urx: urx = x[0]
-        if   x[1] < lly: lly = x[1]
-        elif x[1] > ury: ury = x[1]
-    return (llx, lly, urx, ury)
-
+# Create effect instance and apply it.
+effect = ArtistSignatureEffect()
+effect.affect()
 
 class ArtistSignatureEffect(inkex.Effect):
     """
-    Inkscape artist extension.
+    Inkscape artist extension effect.
     Creates artist's signature on the document.
     """
     def __init__(self):
-        """
-        Constructor.
-        Defines the options of the script.
-        """
-        # Call the base class constructor.
         inkex.Effect.__init__(self)
         self.artistName = ''
 
@@ -82,7 +65,6 @@ class ArtistSignatureEffect(inkex.Effect):
         Effect behaviour.
         Overrides base class' method and inserts the artist's name text into SVG document.
         """
-        # Get artist's name, text size, hex Colour, signature place.
         self.artistName = self.options.artistName
         textSize = self.options.textSize
         fontType = self.options.fontType
@@ -90,10 +72,8 @@ class ArtistSignatureEffect(inkex.Effect):
         hexColour = self.getHexColour(self.options.strokeColour)
         signaturePlace = self.options.signaturePlace
 
-        # Get document dimensions
-        scale = self.unittouu('1px')
-
         # Make bounding box
+        scale = self.unittouu('1px')
         if self.objectIsSelected():
             self.bbox = self.getBoundingBoxDimensions(scale)
 
@@ -127,16 +107,6 @@ class ArtistSignatureEffect(inkex.Effect):
             self.artistName = social + ': u/' + self.artistName.replace(" ", "")
         elif social == 'DeviantArt':
             self.artistName = social + ': ' + self.artistName
-        """
-            attribs = {
-                'height'    : str(height),
-                'width'     : str(height),
-                'x'         : str(position[0]),
-                'y'         : str(position[1])
-                }
-            node = inkex.etree.SubElement(layer, inkex.addNS('image','svg'), 'image')
-            xlink = node.get(inkex.addNS('href','xlink'))
-        """
 
     def createTextLayer(self, layerName):
         """
@@ -227,16 +197,16 @@ class ArtistSignatureEffect(inkex.Effect):
         """
         Creates text with given options
         """
-        text_style = { 'font-size': str(fontHeight),
+        textStyle = { 'font-size': str(fontHeight),
                        'font-family': fontType,
                        'text-anchor': 'middle',
                        'text-align': 'center',
                        'fill': hexColour }
-        text_atts = {'style':simplestyle.formatStyle(text_style),
+        textAttributes = {'style':simplestyle.formatStyle(textStyle),
                      'x': str(44),
                      'y': str(-15) }
-        text = inkex.etree.SubElement(layer, 'text', text_atts)
-        text.set('style', formatStyle(text_style))
+        text = inkex.etree.SubElement(layer, 'text', textAttributes)
+        text.set('style', formatStyle(textStyle))
         text.text = textString
         return text
 
@@ -247,6 +217,16 @@ class ArtistSignatureEffect(inkex.Effect):
         except AttributeError:
             return self.unittouu(param)
 
-# Create effect instance and apply it.
-effect = ArtistSignatureEffect()
-effect.affect()
+def points_to_bbox(p):
+    """ 
+    from a list of points (x,y pairs)
+    return the lower-left xy and upper-right xy
+    """
+    llx = urx = p[0][0]
+    lly = ury = p[0][1]
+    for x in p[1:]:
+        if   x[0] < llx: llx = x[0]
+        elif x[0] > urx: urx = x[0]
+        if   x[1] < lly: lly = x[1]
+        elif x[1] > ury: ury = x[1]
+    return (llx, lly, urx, ury)
